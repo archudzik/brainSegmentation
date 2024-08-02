@@ -1,6 +1,6 @@
 # Brain Structural Segmentation Workflow
 
-This project processes MRI data using FreeSurfer and extracts specific regions of interest (ROIs) from the MRI data. The extracted data includes volumes and centroids of various brain structures, which are then aggregated and normalized.
+This project processes standard MRI scan using FreeSurfer and extracts specific regions of interest (ROIs) from the MRI data. The extracted data includes volumes and centroids of various brain structures, which are then aggregated and normalized.
 
 ## Requirements
 
