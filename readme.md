@@ -63,3 +63,7 @@ dcm2niix -o "/path/to/mri/" "/path/to/mri/"
 #### b. Operating system compatibility
 
 You can install FreeSurfer on Linux, macOS, and Windows (using WSL: https://learn.microsoft.com/en-us/windows/wsl/about).
+
+## License
+
+This project is licensed under the MIT License.
