@@ -66,4 +66,4 @@ You can install FreeSurfer on Linux, macOS, and Windows (using WSL: https://lear
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the Apache License 2.0.
