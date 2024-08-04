@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+import json
 import os
 import time
 import nibabel as nib
@@ -79,9 +80,8 @@ def extract_volumes(study_id, studies_output):
     return volumes
 
 
-def extract_coordinates(aseg_file, structure_label):
+def extract_coordinates(aseg, structure_label):
     '''Step 3: Extract coordinates of structures and convert to RAS'''
-    aseg = nib.load(aseg_file)
     affine = aseg.affine
     seg_data = aseg.get_fdata()
     coords = np.argwhere(seg_data == structure_label)
@@ -109,10 +109,10 @@ def extract_roi_info(study_id, roi_labels, studies_output):
         if isinstance(label, list):
             coords = []
             for lbl in label:
-                coords.extend(extract_coordinates(aseg_file, lbl))
+                coords.extend(extract_coordinates(aseg, lbl))
             coords = np.array(coords)
         else:
-            coords = extract_coordinates(aseg_file, label)
+            coords = extract_coordinates(aseg, label)
 
         volume = len(coords) * voxel_volume if len(coords) > 0 else 0
         centroid = np.mean(coords, axis=0) if len(coords) > 0 else None
@@ -291,6 +291,102 @@ def save_results(result_df, output_path):
     """Saves the assembled DataFrame to a CSV file."""
     result_df.to_csv(output_path, index=False, sep=';')
 
+def save_coordinates_to_html(roi_info, output_file):
+    '''Save the coordinates to an HTML file with Three.js visualization'''
+    def serialize_coordinates(coords):
+        return coords.tolist() if isinstance(coords, np.ndarray) else coords
+
+    serialized_roi_info = {
+        roi: {
+            'coordinates': serialize_coordinates(info['coordinates']),
+            'volume': info['volume'],
+            'centroid': serialize_coordinates(info['centroid'])
+        }
+        for roi, info in roi_info.items()
+    }
+
+    html_template = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>3D ROI Visualization</title>
+    </head>
+    <body style="margin: 0; padding: 0">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <script>
+            const roiData = {roi_data};
+            const colors = ["#caa331", "#6f71d9", "#96b642", "#563688", "#44cc7c", "#bc51a8", "#59ac4c", "#c584d5", "#396d22", "#da6295", "#48b989", "#e1556e", "#33d4d1", "#d85a49", "#5e87d3", "#c37127", "#892b60", "#76b870", "#ac4258", "#a2b864", "#ad4248", "#ccad52", "#984126", "#7a7020", "#ce9157"]
+            
+            function init() {{
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
+
+                let iRoi = 0;
+                const sections = ['coordinates', 'centroid']
+                for (const roi in roiData) {{
+                    sections.forEach((roiSection) => {{
+                        let coords = roiData[roi][roiSection];
+                        if (roiSection === 'centroid') {{
+                            coords = [roiData[roi][roiSection]];
+                        }}
+                        if (coords.filter(Boolean).length === 0) {{
+                            return;
+                        }}
+                        const geometry = new THREE.BufferGeometry();
+                        const points = [];
+                        for (let i = 0; i < coords.length; i++) {{
+                            points.push(coords[i][0], coords[i][1], coords[i][2]);
+                        }}
+                        const vertices = new Float32Array(points);
+                        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+                        let material = new THREE.PointsMaterial({{ color: colors[iRoi], size: 0.1, }});
+                        if (roiSection === 'centroid') {{
+                            material = new THREE.PointsMaterial({{ color: colors[iRoi], size: 5, }});
+                        }}
+                        const pointCloud = new THREE.Points(geometry, material);
+                        scene.add(pointCloud);
+                    }})
+                    iRoi++;
+                }};
+
+                function onDocumentMouseWheel(event) {{
+                    camera.fov += event.deltaY * 0.05;
+                    camera.fov = Math.max(10, Math.min(100, camera.fov));
+                    camera.updateProjectionMatrix();
+                }}
+                document.addEventListener('wheel', onDocumentMouseWheel, false);
+
+                function animate() {{
+                    const r = Date.now() * 0.0005;
+                    camera.position.x = 180 * Math.cos(r);
+                    camera.position.z = 180 * Math.sin(r);
+                    camera.lookAt(scene.position);
+                    requestAnimationFrame(animate);
+                    renderer.render(scene, camera);
+                }}
+
+                scene.fog = new THREE.FogExp2( 0x000000, 0.001 );
+                camera.position.z = 40;
+                camera.position.y = 0;
+                animate();
+            }}
+
+            init();
+        </script>
+    </body>
+    </html>
+    """
+
+    roi_data_json = json.dumps(serialized_roi_info)
+    html_content = html_template.format(roi_data=roi_data_json)
+
+    with open(output_file, 'w') as f:
+        f.write(html_content)
 
 def main():
     '''Pipeline execution'''
@@ -383,6 +479,11 @@ def main():
     # Save
     output_results_csv = os.path.join(csv_out, f'{now_date}_norm.csv')
     save_results(normalized_df, output_results_csv)
+    
+    # Coords
+    output_results_points = os.path.join(csv_out, f'{now_date}_{study_id}_s3d.html')
+    save_coordinates_to_html(roi_info, output_results_points)
+    print(f"3d visualization written to {output_results_points}")
 
     # Finish and inform
     print(f"Normalized results written to {output_results_csv}")

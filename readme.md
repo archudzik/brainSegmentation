@@ -40,10 +40,11 @@ python workflow.py --mri "/path/to/mri/file.nii" --id "study123" --age 60
 
 ## Output
 
-The script generates two output files:
+The script generates three output files:
 
 1. Raw results CSV: Contains volumes and centroids of various ROIs.
 2. Summary CSV: Aggregated and normalized results.
+3. 3d visualization HTML: Presents cloud points and their respective centroids.
 
 ## Notes
 
