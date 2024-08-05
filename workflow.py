@@ -55,7 +55,7 @@ for roi in roi_labels.keys():
 def run_recon_all(input_mri, study_id, studies_output):
     '''Step 1: Run Freesurfer's recon-all'''
     cmd1 = f"recon-all -i {input_mri} -s {study_id} -all -sd {studies_output}"
-    print(f"Running command: {cmd1}")
+    print(f"[..] Running command: {cmd1}")
     os.system(cmd1)
 
 
@@ -66,10 +66,10 @@ def extract_volumes(study_id, studies_output):
     for asegstats_file_name in asegstats_file_names:
         asegstats_file = os.path.join(
             studies_output, study_id, 'stats', asegstats_file_name)
-        print(f"Looking for aseg.stats file at: {asegstats_file}")
+        print(f"[..] Looking for aseg.stats file at: {asegstats_file}")
 
         if not os.path.exists(asegstats_file):
-            print(f"File not found: {asegstats_file}")
+            print(f"[!!] File not found: {asegstats_file}")
             return {}
 
         aseg_data = fs_stat_2_pd(asegstats_file)
@@ -97,15 +97,15 @@ def extract_roi_info(study_id, roi_labels, studies_output):
     voxel_volume = np.prod(aseg.header.get_zooms())
 
     if not os.path.exists(aseg_file):
-        print(f"File not found: {aseg_file}")
+        print(f"[!!] File not found: {aseg_file}")
         return np.array([])
 
     for roi, label in roi_labels.items():
         if label is None:
-            print(f"No label defined for {roi}")
+            print(f"[!!] No label defined for {roi}")
             continue
 
-        print(f"Extracting data for {roi} (label: {label})")
+        print(f"[..] Extracting data for {roi} (label: {label})")
         if isinstance(label, list):
             coords = []
             for lbl in label:
@@ -291,6 +291,7 @@ def save_results(result_df, output_path):
     """Saves the assembled DataFrame to a CSV file."""
     result_df.to_csv(output_path, index=False, sep=';')
 
+
 def save_coordinates_to_html(roi_info, output_file):
     '''Save the coordinates to an HTML file with Three.js visualization'''
     def serialize_coordinates(coords):
@@ -388,6 +389,7 @@ def save_coordinates_to_html(roi_info, output_file):
     with open(output_file, 'w') as f:
         f.write(html_content)
 
+
 def main():
     '''Pipeline execution'''
     parser = argparse.ArgumentParser(description='This is input args')
@@ -416,9 +418,9 @@ def main():
         os.makedirs(csv_out)
 
     # Print the results to verify
-    print("Input MRI:", path_mri)
-    print("Study ID:", study_id)
-    print("Output directory:", studies_output)
+    print("[ok] Input MRI:", path_mri)
+    print("[ok] Study ID:", study_id)
+    print("[ok] Output directory:", studies_output)
 
     # Run
     run_recon_all(path_mri, study_id, studies_output)
@@ -426,7 +428,7 @@ def main():
     # Wait for recon-all to complete
     recon_all_output_dir = os.path.join(studies_output, study_id)
     while not os.path.exists(os.path.join(recon_all_output_dir, 'scripts', 'recon-all.done')):
-        print("Waiting for recon-all to complete...")
+        print("[..] Waiting for recon-all to complete...")
         time.sleep(60)
 
     volumes = extract_volumes(study_id, studies_output)
@@ -462,7 +464,7 @@ def main():
                 'ROI_Volume_mm3': roi_volume
             })
 
-    print(f"Raw structs written to {output_csv}")
+    print(f"[ok] Raw structs written to {output_csv}")
 
     # Get list of CSV files in the directory
     csv_files = get_structs_csv_files(csv_out)
@@ -479,15 +481,16 @@ def main():
     # Save
     output_results_csv = os.path.join(csv_out, f'{now_date}_norm.csv')
     save_results(normalized_df, output_results_csv)
-    
+
     # Coords
-    output_results_points = os.path.join(csv_out, f'{now_date}_{study_id}_s3d.html')
+    output_results_points = os.path.join(
+        csv_out, f'{now_date}_{study_id}_s3d.html')
     save_coordinates_to_html(roi_info, output_results_points)
-    print(f"3d visualization written to {output_results_points}")
+    print(f"[ok] 3d visualization written to {output_results_points}")
 
     # Finish and inform
-    print(f"Normalized results written to {output_results_csv}")
-    print("All done!")
+    print(f"[ok] Normalized results written to {output_results_csv}")
+    print("[ok] Processing is finished.")
 
 
 if __name__ == '__main__':
