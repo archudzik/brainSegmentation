@@ -40,7 +40,7 @@ roi_labels = {
 }
 
 # Define the columns of interest for each ROI
-columns_of_interest = ['StudyID', 'Age']  # Initial
+columns_of_interest = ['StudyID', 'Age', 'Sex']  # Initial
 
 for roi in roi_labels.keys():
     columns_of_interest.extend([  # Extended
@@ -156,8 +156,8 @@ def parse_csv(file_path, sep=';'):
 def initialize_dataframe(columns):
     """Initializes a DataFrame with the specified columns filled with NaN and correct dtypes."""
     dtype_dict = {col: float for col in columns if col not in [
-        'StudyID', 'Age']}
-    dtype_dict.update({'StudyID': str, 'Age': int})
+        'StudyID', 'Age', 'Sex']}
+    dtype_dict.update({'StudyID': str, 'Age': int, 'Sex': str})
     return pd.DataFrame(columns=columns).astype(dtype_dict)
 
 
@@ -179,6 +179,7 @@ def assemble_results(csv_files, input_path):
             if roi in roi_labels.keys():
                 study_id = row['StudyID']
                 age = row['Age']
+                sex = row['Sex']
 
                 # Check if this SubjectID and StudyID combination already exists in the result DataFrame
                 if ((result_df['StudyID'] == study_id)).any():
@@ -198,6 +199,7 @@ def assemble_results(csv_files, input_path):
                     new_row = pd.Series(index=result_df.columns, dtype=object)
                     new_row['StudyID'] = study_id
                     new_row['Age'] = age
+                    new_row['Sex'] = sex
                     new_row[f"{roi}_Volume_mm3"] = row['Volume_mm3']
                     new_row[f"{roi}_ROI_Volume_mm3"] = row['ROI_Volume_mm3']
                     new_row[f"{roi}_Centroid_X"] = row['ROI_Centroid_X']
@@ -212,7 +214,7 @@ def assemble_results(csv_files, input_path):
 def aggregate_results(df):
     """Aggregates the results by selecting one volume and calculating distances from the Thalamus."""
     # Initialize columns for final volumes and distances
-    aggregated_data = df[['StudyID', 'Age']].copy()
+    aggregated_data = df[['StudyID', 'Age', 'Sex']].copy()
 
     for roi in roi_labels.keys():
         # Select the appropriate volume
@@ -399,6 +401,8 @@ def main():
                         help=' ++ please provide subject id')
     parser.add_argument('--age', required=True,
                         help=' ++ please provide age of subject', type=int)
+    parser.add_argument('--sex', required=True,
+                        help=' ++ please provide sex of subject')
     parser.add_argument('--stud_out', required=False,
                         help=' ++ optional studies output path (default = studies_output)', default=f"studies_output")
     parser.add_argument('--csv_out', required=False,
@@ -408,6 +412,7 @@ def main():
     path_mri = args.mri
     study_id = args.id
     age = args.age
+    sex = args.sex
     studies_output = args.stud_out
     csv_out = args.csv_out
 
@@ -437,7 +442,7 @@ def main():
     # Write the results to a CSV file
     now_date = dt.now().strftime("%Y%m%d%H%M%S")
     output_csv = os.path.join(csv_out, f'{now_date}_{study_id}_structs.csv')
-    fieldnames = ['StudyID', 'Age', 'ROI', 'Volume_mm3', 'ROI_Centroid_X',
+    fieldnames = ['StudyID', 'Age', 'Sex', 'ROI', 'Volume_mm3', 'ROI_Centroid_X',
                   'ROI_Centroid_Y', 'ROI_Centroid_Z', 'ROI_Volume_mm3']
 
     with open(output_csv, 'w', newline='') as csvfile:
@@ -456,6 +461,7 @@ def main():
             writer.writerow({
                 'StudyID': study_id,
                 'Age': age,
+                'Sex': sex,
                 'ROI': roi,
                 'Volume_mm3': volume,
                 'ROI_Centroid_X': centroid_x,

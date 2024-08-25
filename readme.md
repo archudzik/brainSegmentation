@@ -29,7 +29,7 @@ To run the script, you need to provide the path to the MRI file, study ID, and a
 ### Example Command
 
 ```python
-python workflow.py --mri "/path/to/mri/file.nii" --id "study123" --age 60
+python workflow.py --mri "/path/to/mri/file.nii" --id "study123" --age 60 --sex "M"
 ```
 
 ### Command-Line Arguments
@@ -37,6 +37,7 @@ python workflow.py --mri "/path/to/mri/file.nii" --id "study123" --age 60
 - --mri: Path to the MRI file (.nii format).
 - --id: Study ID (any string).
 - --age: Age of the patient (integer).
+- --sex: Sex of the patient (M or F).
 
 ## Output
 
