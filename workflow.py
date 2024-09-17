@@ -9,6 +9,30 @@ import argparse
 import csv
 
 '''ROI Labels from FreeSurferColorLUT.txt'''
+'''
+10  Left-Thalamus                           0   118 14  0
+49  Right-Thalamus                          0   118 14  0
+17  Left-Hippocampus                        220 216 20  0
+53  Right-Hippocampus                       220 216 20  0
+18  Left-Amygdala                           103 255 255 0
+54  Right-Amygdala                          103 255 255 0
+11  Left-Caudate                            122 186 220 0
+50  Right-Caudate                           122 186 220 0
+12  Left-Putamen                            236 13  176 0
+51  Right-Putamen                           236 13  176 0
+13  Left-Pallidum                           12  48  255 0
+52  Right-Pallidum                          13  48  255 0
+26  Left-Accumbens-area                     255 165 0   0
+58  Right-Accumbens-area                    255 165 0   0
+28  Left-VentralDC                          165 42  42  0
+60  Right-VentralDC                         165 42  42  0
+15  4th-Ventricle                           42  204 164 0
+7   Left-Cerebellum-White-Matter            220 248 164 0
+8   Left-Cerebellum-Cortex                  230 148 34  0
+46  Right-Cerebellum-White-Matter           220 248 164 0
+47  Right-Cerebellum-Cortex                 230 148 34  0
+24  CSF                                     60  60  60  0
+'''
 roi_labels = {
     "Thalamus": [10, 49],  # Combines left (10) and right (49)
     "Left-Hippocampus": 17,
@@ -21,21 +45,13 @@ roi_labels = {
     "Right-Putamen": 51,
     "Left-Globus Pallidus": 13,
     "Right-Globus Pallidus": 52,
-    "Left-Subthalamic Nucleus": 26,
-    "Right-Subthalamic Nucleus": 58,
-    "Left-Substancia-Nigra": 27,
-    "Right-Substancia-Nigra": 59,
-    "Left-Red Nucleus": 28,
-    "Right-Red Nucleus": 60,
-    "Pons": 15,
-    "Spinal Cord": 126,
+    "Left-Accumbens": 26,
+    "Right-Accumbens": 58,
+    "Left-VentralDC": 28,
+    "Right-VentralDC": 60,
+    "4th-Ventricle": 15,
     "Left-Cerebellum": [8, 7],  # Combines white matter (8) and cortex (7)
     "Right-Cerebellum": [47, 46],  # Combines white matter (47) and cortex (46)
-    "Motor Cortex": [1022, 2022],  # Use labels from aparc+aseg.mgz
-    # Superior Frontal Gyrus (1028) + Middle Frontal Gyrus (1027) + Inferior Frontal Gyrus (1019, 1020, 1018) + Orbital Frontal Cortex (1012, 1014)
-    "Left-Prefrontal Cortex": [1028, 1027, 1019, 1020, 1018, 1012, 1014],
-    # Superior Frontal Gyrus (2028) + Middle Frontal Gyrus (2027) + Inferior Frontal Gyrus (2019, 2020, 2018) + Orbital Frontal Cortex (2012, 2014)
-    "Right-Prefrontal Cortex": [2028, 2027, 2019, 2020, 2018, 2012, 2014],
     "CSF": 24
 }
 
