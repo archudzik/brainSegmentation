@@ -35,25 +35,26 @@ import csv
 '''
 roi_labels = {
     "Thalamus": [10, 49],  # Combines left (10) and right (49)
-    "Left-Hippocampus": 17,
-    "Right-Hippocampus": 53,
-    "Left-Amygdala": 18,
-    "Right-Amygdala": 54,
-    "Left-Caudate Nucleus": 11,
-    "Right-Caudate Nucleus": 50,
-    "Left-Putamen": 12,
-    "Right-Putamen": 51,
-    "Left-Globus Pallidus": 13,
-    "Right-Globus Pallidus": 52,
-    "Left-Accumbens": 26,
-    "Right-Accumbens": 58,
-    "Left-VentralDC": 28,
-    "Right-VentralDC": 60,
-    "4th-Ventricle": 15,
+    "Left-Hippocampus": [17],
+    "Right-Hippocampus": [53],
+    "Left-Amygdala": [18],
+    "Right-Amygdala": [54],
+    "Left-Caudate": [11],
+    "Right-Caudate": [50],
+    "Left-Putamen": [12],
+    "Right-Putamen": [51],
+    "Left-Pallidum": [13],
+    "Right-Pallidum": [52],
+    "Left-Accumbens-area": [26],
+    "Right-Accumbens-area": [58],
+    "Left-VentralDC": [28],
+    "Right-VentralDC": [60],
+    "4th-Ventricle": [15],
     "Left-Cerebellum": [8, 7],  # Combines white matter (8) and cortex (7)
     "Right-Cerebellum": [47, 46],  # Combines white matter (47) and cortex (46)
-    "CSF": 24
+    "CSF": [24]
 }
+
 
 # Define the columns of interest for each ROI
 columns_of_interest = ['StudyID', 'Age', 'Sex']  # Initial
@@ -117,19 +118,13 @@ def extract_roi_info(study_id, roi_labels, studies_output):
         return np.array([])
 
     for roi, label in roi_labels.items():
-        if label is None:
-            print(f"[!!] No label defined for {roi}")
-            continue
-
+        coords = []
         print(f"[..] Extracting data for {roi} (label: {label})")
-        if isinstance(label, list):
-            coords = []
-            for lbl in label:
-                coords.extend(extract_coordinates(aseg, lbl))
-            coords = np.array(coords)
-        else:
-            coords = extract_coordinates(aseg, label)
 
+        for lbl in label:
+            coords.extend(extract_coordinates(aseg, lbl))
+            
+        coords = np.array(coords)
         volume = len(coords) * voxel_volume if len(coords) > 0 else 0
         centroid = np.mean(coords, axis=0) if len(coords) > 0 else None
         roi_info[roi] = {
