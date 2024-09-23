@@ -50,8 +50,8 @@ roi_labels = {
     "Left-VentralDC": [28],
     "Right-VentralDC": [60],
     "4th-Ventricle": [15],
-    "Left-Cerebellum": [8, 7],  # Combines white matter (8) and cortex (7)
-    "Right-Cerebellum": [47, 46],  # Combines white matter (47) and cortex (46)
+    "Left-Cerebellum": [8, 7],  # Combines white matter (7) and cortex (8)
+    "Right-Cerebellum": [47, 46],  # Combines white matter (46) and cortex (47)
     "CSF": [24]
 }
 
