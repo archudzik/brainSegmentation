@@ -344,26 +344,60 @@ def save_coordinates_to_html(roi_info, output_file):
                 const sections = ['coordinates', 'centroid']
                 for (const roi in roiData) {{
                     sections.forEach((roiSection) => {{
+                        
                         let coords = roiData[roi][roiSection];
+                        
                         if (roiSection === 'centroid') {{
                             coords = [roiData[roi][roiSection]];
                         }}
+                        
+                        // When working with MRI data and rendering points in 3D space, it's common to encounter issues related to coordinate system differences. 
+                        // MRI scans are often stored in a coordinate system that may differ from the one used in Three.js for rendering. 
+                        // Specifically, MRI data might use a right-handed coordinate system, while Three.js uses a left-handed one by default.
+                        // Since the coordinate systems are mirrored along certain axes, you need to flip one or more axes to align them properly.
+                        coords = coords.map(coord => [coord[1], coord[2], coord[0]]);
+    
                         if (coords.filter(Boolean).length === 0) {{
                             return;
                         }}
+    
                         const geometry = new THREE.BufferGeometry();
                         const points = [];
                         for (let i = 0; i < coords.length; i++) {{
                             points.push(coords[i][0], coords[i][1], coords[i][2]);
                         }}
+    
                         const vertices = new Float32Array(points);
                         geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-                        let material = new THREE.PointsMaterial({{ color: colors[iRoi], size: 0.1, }});
+                        
+                        let material = new THREE.PointsMaterial({{ color: colors[iRoi], size: 1, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending,  }});
+    
                         if (roiSection === 'centroid') {{
+                            // Set point size
                             material = new THREE.PointsMaterial({{ color: colors[iRoi], size: 5, }});
                         }}
+
                         const pointCloud = new THREE.Points(geometry, material);
                         scene.add(pointCloud);
+                        
+                        if (roiSection === 'centroid') {{
+                            // Add label
+                            const centroidPosition = new THREE.Vector3(vertices[0], vertices[1], vertices[2]); 
+                            // Create a canvas element and draw the label
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            context.clearRect(0, 0, canvas.width, canvas.height);
+                            context.font = '30px Arial';
+                            context.fillStyle = colors[iRoi];
+                            context.fillText(roi, 0, 30);
+                            const texture = new THREE.CanvasTexture(canvas);
+                            const spriteMaterial = new THREE.SpriteMaterial({{ map: texture, transparent: true, depthWrite: false, }});
+                            const sprite = new THREE.Sprite(spriteMaterial);
+                            sprite.position.copy(centroidPosition);
+                            const scaleFactor = camera.fov / 30; 
+                            sprite.scale.set(10 * scaleFactor, 5 * scaleFactor, 1);  
+                            scene.add(sprite);
+                        }}
                     }})
                     iRoi++;
                 }};
@@ -374,9 +408,34 @@ def save_coordinates_to_html(roi_info, output_file):
                     camera.updateProjectionMatrix();
                 }}
                 document.addEventListener('wheel', onDocumentMouseWheel, false);
+                
+                let isMouseDown = false;
+                let startY = 0;  
+                let cameraTarget = new THREE.Vector3(90, 0, 0); 
+
+                function onDocumentMouseDown(event) {{
+                    isMouseDown = true;
+                    startY = event.clientY;  
+                }}
+                document.addEventListener('mousedown', onDocumentMouseDown, false);
+
+                function onDocumentMouseMove(event) {{
+                    if (!isMouseDown) return;  
+                    const deltaY = event.clientY - startY;  
+                    startY = event.clientY;  
+                    const angle = deltaY * 0.005;  
+                    camera.position.y += angle * 30;  
+                    camera.lookAt(cameraTarget);  
+                }}
+                document.addEventListener('mousemove', onDocumentMouseMove, false);
+
+                function onDocumentMouseUp() {{
+                    isMouseDown = false;
+                }}
+                document.addEventListener('mouseup', onDocumentMouseUp, false);
 
                 function animate() {{
-                    const r = Date.now() * 0.0005;
+                    const r = Date.now() * 0.0001;
                     camera.position.x = 180 * Math.cos(r);
                     camera.position.z = 180 * Math.sin(r);
                     camera.lookAt(scene.position);
