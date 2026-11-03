@@ -69,3 +69,9 @@ You can install FreeSurfer on Linux, macOS, and Windows (using WSL: https://lear
 ## License
 
 This project is licensed under the MIT License.
+
+## Research data and licensing
+
+The repository's MIT `LICENSE` covers the original Python workflow code. FreeSurfer, `dcm2niix`, and their dependencies have their own licenses and installation conditions; this repository does not relicense them.
+
+MRI scans, participant identifiers, age/sex metadata, segmentation results, CSV summaries, and 3D visualizations may contain participant-level information. Keep real study input and generated outputs in access-controlled storage, and check study consent, ethics approval, and data-sharing agreements before publication. The existing `studies_input/`, `studies_output/`, and `processed_data/` ignore rules are intended to keep generated data out of version control. This is a research workflow, not a clinical diagnostic tool.
